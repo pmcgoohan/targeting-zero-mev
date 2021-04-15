@@ -19,11 +19,11 @@ Well our instincts are correct. Decentralization will fix the problem. The reaso
 
 A network is only as decentralized as its weakest point. 
 
-Blockchain structure_ _is fully decentralized. Blocks are proposed and validated by consensus across tens of thousands of nodes. But there is a dirty secret at the heart of each block. While the blockchain _structure_ is created collaboratively, the _content_ of each block is not.
+Blockchain structure is fully decentralized. Blocks are proposed and validated by consensus across tens of thousands of nodes. But there is a dirty secret at the heart of each block. While the blockchain _structure_ is created collaboratively, the _content_ of each block is not.
 
 This fact is not obvious because it happens in private in the few milliseconds it takes for a miner/validator to create a block and because it is couched in the elegantly distributed data structure that surrounds it.
 
-But the fact is that the _content _of each block is created by a centralized authority without recourse, the miner. As long as a proposed block is _structurally_ sound, the _content_ of the block is undisputed by the consensus.
+But the fact is that the _content_ of each block is created by a centralized authority without recourse, the miner. As long as a proposed block is _structurally_ sound, the _content_ of the block is undisputed by the consensus.
 
 This distinction between _structure_ and _content_ is profound because nothing about block _structure_ creates the problem of MEV. Frontrunning, backrunning, sandwiching and other attacks all come from the centralized way in which block _content_ is produced.
 
@@ -34,7 +34,13 @@ Block content is not trustless.
 
 There's nothing wrong with the existing structural consensus layer in Ethereum, it works beautifully. But look at how block content creation sits uncomfortably within it, sneakily centralized in the miner. 
 
-[[images/ASLayers.jpg]]
+
+
+<p id="gdcalert1" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image1.jpg). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert2">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
+
+
+![alt_text](images/image1.jpg "image_tooltip")
+
 
 Consider the famous double spending problem that blockchain technology was designed to solve: if one computer has complete control of a financial ledger, how can you stop it spending the same money twice? The answer is that you can’t. Instead you build a structural consensus where no single computer is in complete control of currency transfers, and the problem is solved.
 
@@ -214,11 +220,7 @@ This process repeats with the next set of pickers.
 
 The job of the shuffler queue is to order transactions fairly by randomizing their positions within each chunk. This does not mean, for example, that the entire transaction order within an eth2 block will be randomized together. Transactions will only be randomized within the latency window of a picker set, which will usually be much shorter (perhaps every 1.2 secs vs every 12 secs).
 
-The result is to randomize order where the true order is uncertain, and to preserve order where we are sure of it. This is ideal. We have just fixed the gross inefficiencies of HFT as a side effect of decentralization (see 
-
-<p id="gdcalert5" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: undefined internal link (link text: "Latency Window"). Did you generate a TOC? </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert6">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-[Latency Window](#heading=h.af9lw4nph2si)).
+The result is to randomize order where the true order is uncertain, and to preserve order where we are sure of it. This is ideal. We have just fixed the gross inefficiencies of HFT as a side effect of decentralization.
 
 Before starting work on their allocated chunk, a shuffler waits for the transaction data to arrive. This comes in the form of a MsgPickerChunk from the printer containing their chunk number (chunk numbers match one to one between the picker and shuffler queues, although the queues run independently).
 
@@ -272,11 +274,7 @@ Put simply, they can't choose 1 all the time because they don’t choose at all.
 
 In order for this entropy to be truly useful, it must stay hidden until the pickers have submitted their lists and the other shufflers have committed their encrypted entropy. Once this condition is met, all the shufflers reveal their entropy and we can combine them with some bitwise operations to get our consensus entropy and randomize the transaction order. We only need one shuffler to do this honestly for it to work.
 
-But we have a problem. In some cases the shuffler may get an advantage by withholding their reveal. This could include giving themselves a second chance at a better transaction order and statistical frontrunning (see 
-
-<p id="gdcalert6" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: undefined internal link (link text: "Shuffler Withholding"). Did you generate a TOC? </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert7">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-[Shuffler Withholding](#heading=h.o0omrmieoz9t)).
+But we have a problem. In some cases the shuffler may get an advantage by withholding their reveal. This could include giving themselves a second chance at a better transaction order and statistical frontrunning (see Shuffler Withholding).
 
 This is where vaults come in. Vault roles are also allocated by the scheduler. The shuffler uses threshold encryption (2/3 or 2/4 is probably sufficient) to split their entropy between vaults (MsgEntropySplit). In the case of 2/4, the shuffler splits their entropy so that any 2 of the 4 vaults assigned to them will be able to reveal their key if they fail to.
 
@@ -325,11 +323,7 @@ Anyone with visibility of the network can validate the active participants in th
 
 It is hoped that fraud proofs will be calculable deterministically in the EVM. Where this proves difficult, a slasher voting system can be used instead. This is beyond the scope of this initial document.
 
-See 
-
-<p id="gdcalert7" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: undefined internal link (link text: "Validation Rules And Proofs"). Did you generate a TOC? </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert8">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-[Validation Rules And Proofs](#heading=h.lnlg3c3btrs5) for more details.
+See Validation Rules And Proofs.
 
 
 ### Withholding
