@@ -34,7 +34,9 @@ Block content is not trustless.
 
 There's nothing wrong with the existing structural consensus layer in Ethereum, it works beautifully. But look at how block content creation sits uncomfortably within it, sneakily centralized in the miner. 
 
-![App & Structural Layers & Miner Content](https://github.com/pmcgoohan/images/blob/main/ACSLayers.jpg)
+<p align="center">
+  <img src="https://github.com/pmcgoohan/images/blob/main/ASLayers.jpg">
+</p>
 
 Consider the famous double spending problem that blockchain technology was designed to solve: if one computer has complete control of a financial ledger, how can you stop it spending the same money twice? The answer is that you can’t. Instead you build a structural consensus where no single computer is in complete control of currency transfers, and the problem is solved.
 
@@ -42,14 +44,9 @@ MEV is the equivalent of the double spending problem for executable blockchains.
 
 So let’s free content from miner control and give it a dedicated consensus layer. Now we have a content layer within a consensus protocol stack. No-one is in control, and everybody is. We have decentralized. Now _that_ feels good.
 
-
-
-<p id="gdcalert2" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image2.jpg). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert3">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/image2.jpg "image_tooltip")
-
-
+<p align="center">
+  <img src="https://github.com/pmcgoohan/images/blob/main/ACSLayers.jpg">
+</p>
 
 ### Advantages
 
@@ -90,14 +87,9 @@ What follows is an overview of one possible block content consensus protocol cal
 
 Here is a simplified view of the protocol. Pickers choose transactions. Shufflers mix them up. The printer manages it all and prints the chunks to the blockchain (or rollup).
 
-
-
-<p id="gdcalert3" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image3.jpg). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert4">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/image3.jpg "image_tooltip")
-
-
+<p align="center">
+  <img src="https://github.com/pmcgoohan/images/blob/main/AlexSteps.jpg">
+</p>
 
 ### In Brief
 
@@ -154,14 +146,9 @@ Where the content layer shares the same network as the structural layer we may b
 
 ### Protocol Overview
 
-
-
-<p id="gdcalert4" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image4.jpg). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert5">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/image4.jpg "image_tooltip")
-
-
+<p align="center">
+  <img src="https://github.com/pmcgoohan/images/blob/main/AlexAll.jpg">
+</p>
 
 ### Consensus Queue
 
