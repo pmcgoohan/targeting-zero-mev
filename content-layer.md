@@ -6,9 +6,7 @@
 
 ### No Satisfaction Guaranteed
 
-Around 1.4 billion dollars will be taken from Ethereum users this year as miner extractable value (MEV). This is in markets valued at around 50 billion dollars.
-
-The nearest equivalent in the traditional financial markets is HFT (high frequency trading). One recent estimate is that HFT is now worth only 1 billion dollars per year in markets valued in the 100s of trillions of dollars, so less than MEV in absolute terms and certainly as a ratio of volume.
+A projected 1.4 billion dollars will be taken from Ethereum users in 2021 as Miner Extractable Value (MEV). For the first time this will surpass the amounts made in High Frequency Trading (HFT) in the traditional financial markets at around 1 billion dollars.
 
 It seems odd that a decentralized blockchain like Ethereum could suffer worse exploits than it’s traditional centralized competitors. Wasn’t decentralization meant to fix this stuff?
 
@@ -55,12 +53,19 @@ We remove control over the content of a block from a single party and distribute
 
 #### Fairness
 
-By stripping any one agent of their ability to manipulate content, applications become fair and equitable to all users by default. Fairness will become an innate property of the network without the need for difficult and obstructive workarounds at the application level that are rarely implemented.
+By stripping any one agent of their ability to manipulate content, applications become fair and equitable to all users by default. Fairness becomes an innate property of the network without the need for difficult and obstructive workarounds at the application level that are rarely implemented. 
+
+While our mechanisms for fair inclusion and ordering may be refined and improved over time, even our first designs are far more equitable than the current worst case of total miner control.
 
 
 #### Integrity
 
 MEV is all but eradicated because there is no centralized authority to bribe.
+
+
+#### Auditable
+
+As with the structural layer, the consensus layer is publicly auditable. Any observer is able to recreate the content of any given block using the publicly available content consensus messages.
 
 
 #### Impact
@@ -70,7 +75,12 @@ Block content protocols are a layer on top of existing block structure protocols
 
 #### Interoperability 
 
-The protocol does not change whether we are creating content for an eth2 validator, a rollup sequencer, eth1 miner or any other Ethereum structural layer. A single content consensus implementation can be used across all of these networks and more. Solve it for one and we solve it for all.
+The protocol does not change whether we are creating content for an eth2 validator, a rollup sequencer, eth1 miner or any other Ethereum structural layer. A single content consensus implementation may be used across all of these networks and more. Solve it for one and we solve it for all.
+
+
+#### Price Discovery 
+
+Inter-market mechanisms like latency arbitrage that are important for price discovery are still permitted. MEV as the exploitation of a powerless victim by a privileged actor due to a centralized vulnerability is not.
 
 
 #### Philosophy 
@@ -91,20 +101,21 @@ Here is a simplified view of the protocol. Pickers choose transactions. Shuffler
   <img src="https://github.com/pmcgoohan/images/blob/main/AlexSteps.jpg">
 </p>
 
+
 ### In Brief
 
 
 
-*   A scheduler allocates a set of roles at random from the pool of nodes to work on each chunk of content:
+*   A scheduler allocates a set of roles at random from a pool of nodes to work on each chunk of content:
 *   Pickers each provide their unique view of the mempool by bundling pending transactions.
 *   These are combined to **prevent transaction censorship**.
 *   Shufflers each provide entropy.
 *   These are combined to randomize each chunk of transactions and **prevent transaction reordering**.
 *   Shufflers share their entropy with vaults who then reveal it if the shufflers don’t to **prevent withholding**.
 *   If the process halts because a participant has gone offline or is being obstructive, skippers act to jump the set and **prevent denial of service**.
-*   _eth2_: if a validator proposes a block that diverges from this consensus content, it will fail attestation and will not be included and the validator may be slashed (validators only need to subscribe to published content blocks, they don’t have to participate in content creation, although they may do)
-*   _centralized rollup sequencer_: if the sequencer fails to write the consensus content, they will be slashed and possibly voted out
-*   _distributed rollup sequencer_: as with eth2, their block will not be validated by the consensus and will fail and/or they will be slashed 
+*   _eth2_: if a validator proposes a block that diverges from this consensus content, it fails attestation and is not included and the validator may be slashed
+*   _centralized rollup sequencer_: if the sequencer fails to write the consensus content, they are be slashed and possibly voted out
+*   _distributed rollup sequencer_: as with eth2, their block is not be validated by the consensus and fails and/or they are slashed 
 
 
 ### Components
@@ -124,7 +135,7 @@ Here is a simplified view of the protocol. Pickers choose transactions. Shuffler
 
 *   Picker (picks transactions from the mempool)
 *   Shuffler (randomizes the picked transactions using their entropy)
-*   Vault (a backup of shufflers entropy)
+*   Vault (a backup of shuffler entropy)
 *   Skipper (kickstarts the picker/shuffler queues if they halt)
 
 
@@ -134,14 +145,14 @@ The printer is our link to the structural layer. It is the miner (eth1), the val
 
 They participate in content creation by publishing chunks of content authored by pickers and shufflers before writing a batch of these chunks to the chain they are servicing. This is done deterministically so they have no power to manipulate the content without failing attestation/being slashed.
 
-They can choose to truncate the content (stop before the end), or even not write any at all (empty block) without failing attestation/being slashed. But this will only delay the inevitable as the next printer will pick up from where they left off in the next block. In that situation the printer loses out on the gas fees from the transactions and gains nothing. So printers have no incentive to withhold.
+They can choose to truncate the content (stop before the end), or even not write any at all (empty block) without failing attestation/being slashed. But this only delays the inevitable as the next printer picks up from where they left off in the next block. In that situation the withholding printer loses out on the gas fees from the transactions and gains nothing. So printers have no incentive to withhold.
 
 
 ### Messages
 
 All messages are digitally signed. The public key and signature must be included when messages are embedded in other messages as well as when they are sent over the network.
 
-Where the content layer shares the same network as the structural layer we may be able to reduce network load by including only transaction hashes rather than full transactions in the picker lists (MsgTransactionsLists) and the final chunks (MsgShufflerChunk). We must be sure to avoid any data availability issues that come from this optimization.
+Where the content layer shares the same network as the structural layer we may be able to reduce network load by including only transaction hashes in the messages rather than full transactions. We must be sure to avoid any data availability issues that come from this optimization.
 
 
 ### Protocol Overview
@@ -167,7 +178,7 @@ Formally it may be better described as a distributed linked list, but we use it 
 
 ### Skippers 
 
-The consensus queue is fast and simple, but it will get stuck if a node we are expecting a message from goes offline.
+The consensus queue is fast and simple, but it gets stuck if a node we are expecting a message from goes offline.
 
 If we allow the printer to skip an offline node, it can abuse the privilege. It is equivalent to giving them censorship rights and therefore an unfair advantage and this is what we are working hard to remove.
 
@@ -175,16 +186,12 @@ So instead some nodes are assigned as skippers. If they suspect a node that we a
 
 We only skip either an entire set (if the picker queue halts), or all of the shufflers in a set (if the shuffler queue halts). We never skip and replace individual nodes within a set, as this gives too much choice to the printer and therefore an unfair advantage.
 
-As a final backstop if the skipper process fails to get things moving again, we can reschedule on the next L1 block write with a new set of roles.
-
-[TODO diagram of a queue with the printer and skippers]
-
 
 ### Pickers and Picker Queue
 
 The job of the picker queue is to create a stream of transactions grouped in chunks. It does this with minimal transaction censorship and equitable inclusion regardless of the location of the originators (eg: it reduces the advantage of running from a server in Telehouse London vs a laptop in Swansea). Transaction order doesn’t matter at this point.
 
-Pickers work to publish chunks to the picker queue as fast as possible. To do this the picker queue runs asynchronously alongside the shuffler queue and never references it. This means that even if the shuffler queue halts, the picker queue will carry on regardless.
+Pickers work to publish chunks to the picker queue as fast as possible. To do this the picker queue runs asynchronously alongside the shuffler queue and never references it. This means that even if the shuffler queue halts, the picker queue carries on regardless.
 
 Before starting work on their allocated chunk, a picker must receive the previous chunk published by the printer (MsgPickerChunk).
 
@@ -199,13 +206,13 @@ This process repeats with the next set of pickers.
 
 ### Shufflers and Shuffler Queue
 
-The job of the shuffler queue is to order transactions fairly by randomizing their positions within each chunk. This does not mean, for example, that the entire transaction order within an eth2 block will be randomized together. Transactions will only be randomized within the latency window of a picker set, which will usually be much shorter (perhaps every 1.2 secs vs every 12 secs).
+The job of the shuffler queue is to order transactions fairly by randomizing their positions within each chunk. This does not mean, for example, that the entire transaction order within an eth2 block is randomized together. Transactions are only randomized within the latency window of a picker set, which is usually much shorter (perhaps every 1.4 secs vs every 12 secs).
 
-The result is to randomize order where the true order is uncertain, and to preserve order where we are sure of it. This is ideal. We have just fixed the gross inefficiencies of HFT as a side effect of decentralization.
+The result is to randomize order where the true order is statistically uncertain, and to preserve order where we are statistically sure of it. We have just fixed the gross inefficiencies of HFT as a side effect of decentralization (see Latency Window).
 
 Before starting work on their allocated chunk, a shuffler waits for the transaction data to arrive. This comes in the form of a MsgPickerChunk from the printer containing their chunk number (chunk numbers match one to one between the picker and shuffler queues, although the queues run independently).
 
-Having received this message and having seen that every other shuffler has committed to some entropy (MsgCommit) and that their vaults have confirmed this commitment (MsgVaultCommit), the shuffler publishes a message revealing their entropy (MsgReveal). We’ve skipped a bit here, but don’t worry... we’ll come back to this. For now just know that by this time all shufflers will have committed to some entropy known only to them which they now reveal to the world.
+Having received this message and having seen that every other shuffler has committed to some entropy (MsgCommit) and that their vaults have confirmed this commitment (MsgVaultCommit), the shuffler publishes a message revealing their entropy (MsgReveal). We’ve skipped a bit here, but don’t worry... we’ll come back to this. For now just know that by this time all shufflers have committed to some entropy known only to them which they now reveal to the world.
 
 The printer waits for either:
 
@@ -233,7 +240,7 @@ The process repeats with the next set of shufflers.
 
 When the printer comes to propose a block, they grab all the content chunks they can fit into it to ensure the highest gas reward, starting with any that didn't make it into the previous block.
 
-The content network may get ahead of the structural network in publishing chunks. This is good as users can begin to see the order pending transactions will be processed before they are committed to a block. It also means the system is running as fast as possible.
+The content network may get ahead of the structural network in publishing chunks. This is good as users see the order pending transactions will be processed before they are committed to a block. It also means the system is running as fast as possible.
 
 
 #### Shuffler Entropy
@@ -242,9 +249,9 @@ In the example above, our shuffler was good and ready to reveal their entropy wh
 
 So first of all, how do shufflers decide on their entropy? We could let them choose it themselves, but this raises the possibility of simple collusion.
 
-Simple collusion requires no active network of collusion between nodes to work. A node could simply always choose an entropy of 1. Other nodes might notice it is doing this and realize that if they did the same it would weaken the randomization. Conceivably, a majority of nodes could end up sending 1 such that when they are allocated as pickers they can game the transaction order. Fortunately we can do better than this. We can force the shufflers to use the entropy available to us in their private key.
+Simple collusion requires no active network of collusion between nodes to work. A node could simply always choose an entropy of 1. Other nodes might notice it is doing this and realize that if they did the same it weakens the randomization. Conceivably, a majority of nodes could end up sending 1 such that when they are allocated as pickers they can game the transaction order. Fortunately we can do better than this. We can force the shufflers to use the entropy available to us in their private key.
 
-The shuffler creates a message containing the current chunk number and perhaps some other public and relatively static data. This message will be the same for everyone and has very low entropy (MsgEntropy). But once signed by the shuffler’s private key, the signature of this message has high entropy.
+The shuffler creates a message containing the current chunk number and perhaps some other public and relatively static data. This message is the same for everyone and has very low entropy (MsgEntropy). But once signed by the shuffler’s private key, the signature of this message has high entropy.
 
 While MsgEntropy can be recreated by anyone using the same publicly available data, the entropy from the signature is private to each shuffler. As such, by decrypting MsgEntropy to use it’s signature as a shufflers’s entropy, we also get to validate that the shuffler used the correct plaintext MsgEntropy as the source.
 
@@ -257,12 +264,12 @@ In order for this entropy to be truly useful, it must stay hidden until the pick
 
 But we have a problem. In some cases the shuffler may get an advantage by withholding their reveal. This could include giving themselves a second chance at a better transaction order and statistical frontrunning (see Shuffler Withholding).
 
-This is where vaults come in. Vault roles are also allocated by the scheduler. The shuffler uses threshold encryption (2/3 or 2/4 is probably sufficient) to split their entropy between vaults (MsgEntropySplit). In the case of 2/4, the shuffler splits their entropy so that any 2 of the 4 vaults assigned to them will be able to reveal their key if they fail to.
+This is where vaults come in. Vault roles are also allocated by the scheduler. The shuffler uses threshold encryption (2/3 or 2/4 is probably sufficient) to split their entropy between vaults (MsgEntropySplit). In the case of 2/4, the shuffler splits their entropy so that any 2 of the 4 vaults assigned to them can reveal it if they fail to.
 
 
 #### Entropy Commit Reveal
 
-By convention, vaults 0 and 1 will always reveal under the same conditions as the shuffler. This is so they don’t increase latency by waiting until the shuffler has failed to reveal first. It also allows everyone to validate that the shuffler sent the vaults a valid split of their entropy key.
+By convention, vaults 0 and 1 always reveal under the same conditions as the shuffler. This is so they don’t increase latency by waiting until the shuffler has failed to reveal first. It also allows everyone to validate that the shuffler sent the vaults a valid split of their entropy key.
 
 If those vaults are slow to reveal, the others can begin to reveal instead. By not revealing more than is immediately necessary we reduce network messages.
 
@@ -270,22 +277,20 @@ To prevent unnecessary halting when vaults become unavailable, shufflers only ne
 
 This all seems like a lot of work, especially as the shuffler must communicate with it's vaults privately to send them their key split (MsgEntropySplit). But remember that everything can be done in advance right up to the point of revealing. This means that it does not increase latency.
 
-[TODO if time- diagram showing the shuffler protocol and how it isn’t held back by commit preparations]
-
 
 ### Skipping 
 
 Although the picker and shuffler queues run asynchronously, the chunks they operate on match one to one as determined by the scheduler. 
 
-The only exception to this one to one rule is when a shuffler set is skipped. This can only be done when the threshold of skip shuffler messages is sent for that chunk (MsgSkip). Because this is decided by consensus, it is low risk.
+The only exception to this one to one rule is when a shuffler set is skipped. This can only be done when the threshold of skip messages is sent for that chunk (MsgSkip). Because this is decided by consensus, it is low risk.
 
 In this case the printer must use the next set to shuffle both it’s chunk and the previously skipped chunk and publish both.
 
 If the next set is also skipped, then the printer must use the set after that to shuffle both it’s chunk and the two previously skipped chunks and publish all three...and so on.
 
-In this way we can be sure that the shuffler queue will always catch up with the picker queue, even if the latency goes up temporarily.
+In this way we can be sure that the shuffler queue catches up with the picker queue, even if latency goes up temporarily.
 
-As well as for simplicity, the reason for this one to one relationship is that if they were scheduled independently it might create some incentive for a role to withhold. They could try and skip to a combination of colluding picker and shufflers sets, although this would be very difficult in practice.
+As well as for simplicity, the reason for this one to one relationship is that if they were scheduled independently it might create some incentive for a role to withhold. They may try to skip to a combination of colluding picker and shufflers sets, although this is very difficult in practice.
 
 
 ### Validation 
@@ -294,7 +299,7 @@ So what happens when roles misbehave and how can we prove that they have?
 
 Validation of the network relies heavily on the cryptographic principle of non-repudiation: that you can prove when more than one signed message was sent from the same address.
 
-To understand the significance of this, let's imagine that Alice sends some entropy that creates a transaction order in a block that she doesn't like. Tough luck. If she sends a second message to try and reorder it, this will be detected and she can be penalized.
+To understand the significance of this, let's imagine that Alice sends some entropy that creates a transaction order in a block that she doesn't like. Tough luck. If she sends a second message to try and reorder it, this is detected and she is penalized.
 
 Secondly, because the protocol defines exactly how a chunk should be formed given a certain set of messages, we can always validate that the printer did this correctly and without manipulation.
 
@@ -302,14 +307,14 @@ If a violation is simply that a role is not scheduled to send a message for a ce
 
 Anyone with visibility of the network can validate the active participants in this way. If necessary, they can submit fraud proofs for slashing at a later date on the L1 network where slashable deposits are kept for each participant.
 
-It is hoped that fraud proofs will be calculable deterministically in the EVM. Where this proves difficult, a slasher voting system can be used instead. This is beyond the scope of this initial document.
+It is hoped that fraud proofs can be calculable deterministically in the EVM. Where this proves difficult, a slasher voting system can be used instead. This is beyond the scope of this initial document.
 
-See Validation Rules And Proofs.
+See Validation Rules And Proofs for details.
 
 
 ### Withholding
 
-So we can validate messages just fine, but if someone doesn't send a message when they are meant to, this is of no help. If a node withholds a message, we have nothing to validate cryptographically or otherwise.
+So we can validate messages just fine, but if someone doesn't send a message when they are meant to this doesn’t help. If a node withholds a message, we have nothing to validate cryptographically or otherwise.
 
 It is important to remove any incentive for roles to withhold a scheduled message intentionally because it harms us twice: 
 
@@ -318,7 +323,7 @@ It is important to remove any incentive for roles to withhold a scheduled messag
 *   it gives an unfair advantage to the withholding attacker. 
 *   it slows down the network for everyone. 
 
-So let’s take each case in turn:
+So let’s examine withholding incentives for each role in turn:
 
 
 #### Picker Withholding
@@ -342,7 +347,7 @@ But they gain nothing from skipping, the next block will likely contain all of t
 
 Shufflers do have incentive to withhold (if we don’t mitigate it).
 
-If they wait until all other shufflers have revealed, they will be the first to know the final transaction order for that chunk (although still not the content of the entire block). This gives them two lines of attack:
+If they wait until all other shufflers have revealed, they are the first to know the final transaction order for that chunk (although still not the content of the entire block). This gives them two lines of attack:
 
 _Second Chance_
 
@@ -354,13 +359,13 @@ Imagine we don’t have distinct picker and shuffler queues and have one single 
 
 This is far from risk free for them. Other transactions may also enter the pool which make conditions less favourable for them and the order of all transactions in the chunk is randomized.
 
-It also only works if adding the transaction has a positive expectation. A Uniswap frontrun for example wouldn’t be exploitable in this way. Let’s say they are ahead of the victim transaction and win $10. Now let’s say they are behind the victim transaction, they will lose $-10, so their expected win is $0 and not worth doing.
+It also only works if adding the transaction has a positive expectation. A Uniswap frontrun for example isn’t exploitable in this way. Let’s say they are ahead of the victim transaction and win $10. Now let’s say they are behind the victim transaction, they lose $-10, so their expected win is $0 and not worth doing.
 
-But if the victim transaction aims to take an offer in an order book, they may win $10 if they beat the victim transaction and lose nothing if they fail to. In this case their expected win is $5 so it is worth doing.
+But if the victim transaction aims to take an offer in an order book, they win $10 if they beat the victim transaction and lose nothing if they fail to. In this case their expected win is $5 so it is worth doing.
 
 No matter, neither of these attacks are possible in the system:
 
-_Second Chances_ are mitigated by the vaults who will reveal the shuffler’s entropy if they don’t. This makes any attempt to withhold ineffective.
+_Second Chances_ are mitigated by the vaults who reveal the shuffler’s entropy if they don’t. This makes any attempt to withhold ineffective.
 
 _Statistical Frontrunning_ is mitigated by having asynchronous picker and shuffler queues. By the time the shuffler has the chance to withhold, the picker queue has already moved on and the shuffler has no chance to add their transaction into the current chunk.
 
@@ -379,16 +384,16 @@ Skippers only have the power to withhold when one or both queues have halted. Th
 
 ##### Shuffler Queue
 
-If the shuffler queue halts, the picker queue will carry on. This is by design as it stops an attacker halting the system to add their transactions in.
+If the shuffler queue halts, the picker queue carries on. This is by design as it stops an attacker halting the system to add their transactions in.
 
 Take the situation where a skipper (or more likely a shuffler) delays a pairs market by halting the shuffler queue hoping to be able to exploit it by arbing against the delayed price later.
 
-They withhold their reveal and then add a new transaction into the pool to execute against the arb they just created. But because the picker queue is still running, their transaction will be added into a later chunk than the one they are aiming for. It is impossible for them to add their transaction into the current chunk, as the transactions have already been finalized. They are delaying themselves as much as everyone else.
+They withhold their reveal and then add a new transaction into the pool to execute against the arb they just created. But because the picker queue is still running, their transaction is added into a later chunk than the one they are aiming for. It is impossible for them to add their transaction into the current chunk, as the transactions have already been finalized. They are delaying themselves as much as everyone else.
 
 
 ##### Picker Queue
 
-If the picker queue halts, the shuffler queue will catch up with it, and then also halt. 
+If the picker queue halts, the shuffler queue catches up with it, and then also halts. 
 
 Take the situation where a skipper (or a picker) delays a pairs market by halting the picker queue hoping to be able to exploit it by arbing against the delayed price later.
 
@@ -401,51 +406,49 @@ When you take into account the fact that it only takes a subset of skippers (eg:
 
 #### Printer Withholding
 
-The printer can choose to truncate the content (stop before the end), or even not write any at all (empty block) without failing attestation/being slashed. But this will only delay the inevitable as the next printer will pick up from where they left off. In that situation the printer loses out on the gas fees from the transactions and gains nothing. 
+The printer can choose to truncate the content (stop before the end), or even not write any at all (empty block) without failing attestation/being slashed. But this only delays the inevitable as the next printer picks up from where they left off. In that situation the withholding printer loses out on the gas fees from the transactions and gains nothing.
 
-The same is true of not publishing picker and shuffler chunks when required. If they stop doing this, the next printer will just pick up from where they left off.
+The same is true of not publishing picker and shuffler chunks when required. If they stop doing this, the next printer just picks up from where they left off.
 
 So printers have no incentive to withhold.
-
-
-### Transaction Reordering
-
-Transaction reordering attacks are mitigated by ordering at random. This is the only equitable strategy as exact timestamps are unknowable in a fast moving globally distributed system. As long as one shuffler acts honestly, **transaction reordering attacks are mitigated**.
-
-Even if all shufflers are dishonest, there is little that they can do. They cannot change the transaction order by picking their entropy, because it is derived for them from their private key. They cannot alter the list of transactions they are randomizing because that has already been finalized by the pickers.
 
 
 ### Transaction Censorship 
 
 As long as one picker is honest and includes all or most of the transactions they can see in the mempool, then** transaction censorship is mitigated**. 
 
-Even if all pickers are dishonest, as long as they have competing interests (are not colluding) they will likely select different transactions and transaction censorship may still be mitigated.
+Even if all pickers are dishonest, as long as they have competing interests (are not colluding) they will likely select different transactions and transaction censorship is partly mitigated.
 
-As well as this, the set of pickers changes each chunk, not just every block. This means that a single blockchain block will usually represent the combined view of many sets of pickers, not just one set, and certainly not the interests of just one miner.
+As well as this, the set of pickers changes each chunk, not just every block. This means that a single blockchain block usually represents the combined view of many sets of pickers, not just one set, and certainly not the interests of just one miner.
+
+
+### Transaction Reordering
+
+Transaction reordering attacks are mitigated by ordering at random within a chunk while maintaining time order between chunks in the same block (see Latency Window). As long as one shuffler acts honestly, **transaction reordering attacks are mitigated**.
+
+Even if all shufflers are dishonest, there is little that they can do. They cannot change the transaction order by picking their entropy, because it is derived for them from their private key. They cannot alter the list of transactions they are randomizing because it has already been finalized by the pickers.
 
 
 ### Latency Window
 
-The picker queue runs as fast as possible, but the printer needs to wait for each picker to return their transaction lists before they can publish a chunk. This does not negatively impact the throughput of the system, but it does add some latency, and this is a good thing. Let me explain.
+The picker queue runs as fast as possible, but it is not instantaneous. This does not negatively impact the throughput of the system, but it does have some latency and this is a good thing. Let me explain.
 
-Our pickers are distributed across the world. One might be in New York, another in Tokyo and another in Melbourne. One cycle of the picker queue may end up taking something like 1.2 secs to complete.
+Our pickers are distributed across the world. One might be in New York, one in Tokyo, another in Melbourne and the printer in Glasgow. One cycle of the picker queue ends up taking something like 1.4 secs to complete.
 
-In the time it takes to complete a cycle, the next set of pickers will be collecting pending transactions. When they see the printer signal that a chunk is completed, they build and submit their lists.
+Within that latency window all transactions are randomized so that they are statistically simultaneous. This means that on average one transaction is no more or less likely to have priority over any other in the chunk. In any individual chunk they are, but statistically they are not. Also, in one block there are many chunks and time order _is_ preserved between chunks.
 
-As described earlier, within that latency window all transactions will be statistically simultaneous. This means that on average one transaction is no more or less likely to have priority over any other in the chunk. In any individual chunk they will, but statistically they will not.
+It is important to note that we are not losing information here. The true information about when each transaction was initiated is unknowable within the latency window. It is impossible to tell whether Alice in Melbourne sent her order before Bob in New York. Even if we could order by arrival time the way that a centralized authority like Nasdaq does, that does not represent the reality of when those transactions were initiated, just how close the originators are to the exchange.
 
-It is important to note that we are not losing information here. The true information about when each transaction was initiated is unknowable within the latency window. It is impossible to tell whether Alice in Melbourne sent her order before Bob in New York. Even if we could order by arrival time the way that a centralized authority like Nasdaq does, that does not represent the reality of when those transactions were initiated.
+The result is to randomize order where the true order is statistically uncertain, and to preserve order where we are statistically sure of it. Because the pickers change each cycle and are distributed globally there is no centralized exchange to position yourself close to.
 
-Because the pickers change each cycle and are distributed globally there is no centralized exchange to position yourself close to. The best advantage available in terms of infrastructure spend is to make sure you have a PoP in all major internet hubs and good access to the pool.
-
-This is a huge deal. These two facts mean that the whole messy inefficiency of HFT is dispensed with. Billions of dollars no longer need to be spent digging up the countryside to get sub millisecond latency advantages at zero social benefit. Users will access applications and markets equitably wherever they are in the world and however well or under resourced they are. HFTs are notoriously high volume too, so the transaction rate will fall.
+This is a huge deal. The whole messy inefficiency of HFT is dispensed with. Billions of dollars no longer need to be spent digging up the countryside to get sub millisecond latency advantages at zero social benefit. Users access applications and markets equitably wherever they are in the world and however well or under resourced they are. HFTs are notoriously high volume too, so the transaction rate falls.
 
 
 ### Collusion Protection
 
 We only need one honest picker and one honest shuffler per set for the system to work perfectly. Although not essential, we can use this to our advantage by having trusted centralized system pickers/shufflers scheduled in every chunk.
 
-If our trust is misplaced and they are not honest, it would not harm the system as we still have the distributed pickers and shufflers. If they are honest, it will ensure that there is always at least one honest view of the transaction pool and some honest entropy, which is all we need even if all the others are colluding.
+If our trust is misplaced and they are not honest, it doesn’t harm the system as we still have the distributed pickers and shufflers. If they are honest, it ensures that there is always at least one honest view of the transaction pool and some honest entropy, which is all we need even if all the others are colluding.
 
 This is a powerful protection against a collusion network ever getting off the ground. The presence of these system actors is a huge disincentive to develop the complex and expensive systems required to collude against the content layer. For example Uniswap themselves could run a system picker and shuffler in a Uniswap L2.
 
@@ -455,38 +458,45 @@ While the distributed pickers and shufflers ideally change from block to block, 
 
 This extra random element may mean we need fewer distributed pickers and shufflers in the main set which decreases halting, although we now have the risk of halting from the centralized parties.
 
-We may have a partially distributed system picker which combines transaction lists from many light volunteer nodes into a single picker list. This would be a good way of involving large numbers of interested parties that are not willing or able to risk a slashable deposit.
+We may have a partially distributed system picker which combines transaction lists from many light volunteer nodes into a single picker list. This is a good way of involving large numbers of interested parties that are not willing or able to risk a slashable deposit.
 
 
 ### Scheduler 
 
-Most secure to allocate different roles each chunk.
 
-In some cases network usage goes up.
+#### Mechanism
 
-Roles where this is the case we may want to reuse within an L1 block.
+We have a pool of nodes willing to participate in the content consensus network. They subscribe via a smart contract on L1 locking up funds for penalties and supplying an address for rewards, similar to eth2 validators and Optimistic sequencers.
 
-These are shufflers, vaults and skippers.
+Let’s define a set as the temporary grouping of pickers, shufflers, vaults and skippers needed to complete consensus on the content of a chunk. It’s hard to know how many sets we are going to need and we want to avoid the overhead of storing a large finite number of randomized sets on L1. Instead we calculate an unlimited number of set combinations randomly but deterministically such that each node can easily arrive at the same schedule from reading state on mainnet by supplying a chunk number.
 
-Pickers can change each time as there is no saving of preparatory work.
+Let’s define some entropy as the output of a RANDO process. More simply it could be the transaction hash of the last content consensus update on mainnet. An algorithm published as part of the protocol randomizes the list of all active content nodes using this entropy to allocate roles. When the list of active nodes is used up, the list is randomized again using the next RNG of the seed and the process continues.
 
-Skippers do not need to change every chunk, but they probably should every block to avoid getting stuck for several blocks. You might require 4 skip messages out of 7 skippers to skip a set.
+In this way we can schedule an arbitrarily high number of sets using no storage space on L1. If a node calculates the schedule wrong and sends a message when it is not needed, it is filtered out by the network.
 
-We could reduce network usage by scheduling the same shuffler set n times rather than once. In this case skipping a shuffler set will mean skipping to the next unique set.
 
-Add schedule ids, then when the schedule changes we don't lose printed chunks from the previous schedule. PROBLEM what's to stop nodes faking old messages. Printer signing for one thing. How about for rollups? Printer address must change each time I think. 
+#### Allocations
 
-Printed picker and shuffler chunks must be preserved between blocks and schedules.
+For the lowest theoretical chance of collusion, every role is rotated each chunk. If this is too much of a load on the network, then some role allocations can be reused for several chunks before being rotated.
 
-Content must persist between structural blocks. So if a printer does not write all of the shuffled content in their block, the next printer must pick up from where they left off. 
+Pickers can always be rotated every chunk, because they have no preparatory work to do and so no additional overhead from doing so.
 
-If this is not enforced, then printers can give themselves a second roll of the dice if they don’t like the content as the pickers and shufflers may create it differently next time.
+Skippers can also always be rotated every chunk, as they only send messages when a queue has halted so there is no overhead at all.
 
-TODO  as simple as not resetting chunk numbers, although the time taken to calculate the schedule will increase.
+Shufflers and vaults have a lot of preparatory work to do. They must communicate key splits privately with each other and send commit messages. Although this is done in advance to avoid latency issues, the network usage could get high.
 
-TODO the transition between printers must be seamless or we could get confusion and disagreement about who has the authority to propose chunks. Because this is specific to each structural layer, we will save a discussion of this for the eth2 and optimistic rollups integration documents to follow.
+One optimization is to allocate a single group of shufflers and vaults to cover an entire L1 block, allowing them to perform discovery a block or more before. 
 
-TODO VIP finish this
+To reduce the chance of halting, we allocate several backup groups of shufflers and vaults in this way, and allow skippers to switch to the next group if one group goes offline. Having received the threshold of skip group messages and moved onto the next group, we can validate that the printer does not cherry-pick groups by returning to an earlier one in the same block.
+
+Because entropy is calculated from not much more than the chunknum, we can reduce overheads again. Shufflers send a single commit message to their vaults containing multiple key splits, let’s say 10. Vaults respond with a single message confirming all 10. They are revealed individually as the chunks progress.
+
+
+#### Printer/Block Transitions
+
+Content chunk numbers must be preserved when blocks and printers change. If we don’t do this then printers can censor transactions by truncating chunks knowing that they will be discarded. The transition between printers must be seamless or we could get confusion about who has the authority to print chunks.
+
+These are integration problems with the structural layer that may be solved differently for different implementations. They will be discussed further in the eth2 and Optimistic rollups integration documents.
 
 
 ### Skipper Delay Line
@@ -507,7 +517,7 @@ As skipper 3 is the final skipper, only it’s skip message can grant the printe
 
 We have still achieved a consensus on skipping the set, but with this process we have also ensured that this takes at least 3 latency windows (perhaps around 4 seconds) giving the shufflers and pickers a fair chance to respond.
 
-There may have to be several skipper delay lines in this case, as the chance of reaching a consensus to skip in series (skip threshold = skipper count) is usually smaller than in parallel (skip threshold &lt;= skipper count). Also the delay line itself can now halt, so for now we will let them work in parallel instead.
+There may have to be several skipper delay lines in this case, as the chance of reaching a consensus to skip in series (skip threshold = skipper count) is usually smaller than in parallel (skip threshold &lt;= skipper count). Also the delay line itself can now halt, so for now we let them work in parallel instead.
 
 
 ### Penalties
@@ -518,18 +528,18 @@ In general:
 
 
 
-*   If a violation is not severe (eg: sending a message for a chunk you are not scheduled for), we will simply ignore the message. This also mitigates many DDOS attacks. 
-*   If a violation will lead to bad content, we can invalidate the chunk or block. 
+*   If a violation is not severe (eg: sending a message for a chunk you are not scheduled for), we simply ignore the message. This also mitigates many DDOS attacks. 
+*   If a violation leads to bad content, we invalidate the chunk or block. 
 *   If a violation is a suspected or outright attempt at manipulation, we can slash the perpetrator.
 
-Setting penalties will require detailed and careful analysis and modelling beyond the scope of this initial document.
+Setting penalties requires detailed and careful analysis and modelling beyond the scope of this initial document.
 
 
 ### Rewards
 
-Rewards will come in the form of L1 payments made to participants. Rewards must be good enough to warrant the cost of running a node and to incentivize good node availability. Beyond this, there are no incentives to withhold so rewards may be low.
+Rewards come in the form of L1 payments made to participants. Rewards must be good enough to warrant the cost of running a node and to incentivize good node availability. Beyond this, there are no incentives to withhold so rewards may be low.
 
-To participate in fraud proofs a node will need to keep messages for at least the length of time it takes to persist the content to L1. Nodes will be encouraged to run L1 clients to give them an independent view of the mempool which may require higher rewards.
+To participate in fraud proofs a node needs to keep messages for at least the length of time it takes to persist the content to L1. Nodes are encouraged to run L1 clients to give them an independent view of the mempool which may require higher rewards.
 
 Setting the exact rewards requires detailed and careful analysis and modelling beyond the scope of this document.
 
@@ -538,7 +548,7 @@ Setting the exact rewards requires detailed and careful analysis and modelling b
 
 While it can be shown that violations of the protocol can be punished, it is also important to show that the system can recover from such violations with as little impact as possible.
 
-This will need to be considered in later documents or later versions of this document.
+This will be considered in later versions of this document.
 
 
 ## Protocol Tables
@@ -625,7 +635,7 @@ If the printer sees this, they can either halt until they are skipped (preferred
 <p>
 The printer may submit their defence even if the first they know of it is when a fraud proof is submitted against them. To do this they must watch the L1 slashing contract closely. 
 <p>
-For this reason, they would do better just to wait for the set to be skipped if they detect duplicate/invalid role messages.
+For this reason, they do better by waiting for the set to be skipped if they detect duplicate/invalid role messages.
 <p>
 Also note, in many cases violations are not slashed, blocks are simply not attested.
    </td>
@@ -659,7 +669,7 @@ The chunk can then be re-created from these messages using the protocol rules an
   <tr>
    <td>Ensure that the printer did not truncate the proposed block more than needed to fit it into the final chunk (ie: that they didn’t censor transactions from the end of the chunk)
    </td>
-   <td>As above. The maximum block size for the network will be known globally so it can be shown that the final MsgShufflerChunk contains fewer transactions than it needs to.
+   <td>As above. The maximum block size for the network is known globally so it can be shown that the final MsgShufflerChunk contains fewer transactions than it needs to.
    </td>
   </tr>
   <tr>
@@ -850,12 +860,34 @@ t=(n/2)+1
 
 ## Conclusion 
 
-We have identified problematic centralization in the Ethereum network, and then proposed a solution to it. 
+We have identified problematic centralization of block content in the Ethereum network and proposed a solution for it. 
 
-The solution eradicates the vast majority of Miner Extractable Value by ensuring fair transaction inclusion and ordering. It also mitigates the worst excesses of High Frequency Trading (HFT), ensuring that as traditional finance moves to Ethereum, these negatives do not follow it.
+The solution eradicates the vast majority of Miner Extractable Value (MEV) by ensuring fair transaction inclusion and ordering. It also mitigates the worst excesses of High Frequency Trading (HFT), ensuring that as traditional finance moves to Ethereum, these negatives do not follow it.
 
 We have done this in a way that works across many Ethereum networks, including eth2, rollups and mainnet (although fork risk is likely too great here).
 
-We see the creation of a content consensus layer as the realization of Ethereum’s ambitions for full decentralization as well as it's ambitions to create fair and equitable globally distributed systems for everybody.
+We see the creation of a content consensus layer as the realization of Ethereum’s ambitions for full decentralization and of it's ambitions to create fair and equitable globally distributed systems for everybody.
 
 The next revisions of this document will focus on the specifics of integrating the protocol with eth2 and Optimistic rollups.
+
+
+## Contact 
+
+pmcgoohan9435@gmail.com
+
+[https://ethresear.ch/u/pmcgoohan/](https://ethresear.ch/u/pmcgoohan/summary)
+
+discord: pmcgoohan#9435
+
+
+## License
+
+MIT License
+
+Copyright © 2021 pmcgoohan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
