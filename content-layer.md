@@ -876,7 +876,9 @@ Future revisions of this document will focus on the specifics of integrating the
 ## Contact 
 
 pmcgoohan9435 at gmail dot com
+
 [https://ethresear.ch/u/pmcgoohan/](https://ethresear.ch/u/pmcgoohan/summary)
+
 discord: pmcgoohan#9435
 
 
