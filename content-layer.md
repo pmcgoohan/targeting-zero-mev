@@ -8,7 +8,7 @@
 
 A projected 1.4 billion dollars will be taken from Ethereum users in 2021 as Miner Extractable Value (MEV). For the first time this will surpass the amounts made in High Frequency Trading (HFT) in the traditional financial markets at around 1 billion dollars.
 
-It seems odd that a decentralized blockchain like Ethereum could suffer worse exploits than it’s traditional centralized competitors. Wasn’t decentralization meant to fix this stuff?
+It seems odd that a decentralized blockchain like Ethereum could suffer worse exploits than it’s traditional centralized competitors. Wasn’t decentralization meant to fix this?
 
 Well our instincts are correct. Decentralization will fix the problem. The reason these problems have not yet been fixed is that Ethereum has not yet fully decentralized.
 
@@ -55,7 +55,7 @@ We remove control over the content of a block from a single party and distribute
 
 By stripping any one agent of their ability to manipulate content, applications become fair and equitable to all users by default. Fairness becomes an innate property of the network without the need for difficult and obstructive workarounds at the application level that are rarely implemented. 
 
-While our mechanisms for fair inclusion and ordering may be refined and improved over time, even our first designs are far more equitable than the current worst case of total miner control.
+Our mechanisms for fair inclusion and ordering are provably close to optimal. They are certainly far more equitable than the current worst case of total miner control.
 
 
 #### Integrity
@@ -65,7 +65,7 @@ MEV is all but eradicated because there is no centralized authority to bribe.
 
 #### Auditable
 
-As with the structural layer, the consensus layer is publicly auditable. Any observer is able to recreate the content of any given block using the publicly available content consensus messages.
+As with the structural layer, the consensus layer is publicly auditable. Any observer is able to recreate the content of any given block using publicly available content consensus messages.
 
 
 #### Impact
@@ -80,12 +80,15 @@ The protocol does not change whether we are creating content for an eth2 validat
 
 #### Price Discovery 
 
-Inter-market mechanisms like latency arbitrage that are important for price discovery are still permitted. MEV as the exploitation of a powerless victim by a privileged actor due to a centralized vulnerability is not.
+Inter-market mechanisms like simple arbitrage that are important for price discovery are still permitted. MEV as the exploitation of a helpless victim by a privileged actor due to a network vulnerability is not.
 
 
 #### Philosophy 
 
 There is currently a centralized aspect to the network and it is causing harm. We need to fix it if we are serious in our ambitions for full decentralization.
+
+
+## 
 
 
 ## Alex - A Block Content Consensus Protocol
@@ -100,7 +103,6 @@ Here is a simplified view of the protocol. Pickers choose transactions. Shuffler
 <p align="center">
   <img src="https://github.com/pmcgoohan/images/blob/main/AlexSteps.jpg">
 </p>
-
 
 ### In Brief
 
@@ -206,9 +208,9 @@ This process repeats with the next set of pickers.
 
 ### Shufflers and Shuffler Queue
 
-The job of the shuffler queue is to order transactions fairly by randomizing their positions within each chunk. This does not mean, for example, that the entire transaction order within an eth2 block is randomized together. Transactions are only randomized within the latency window of a picker set, which is usually much shorter (perhaps every 1.4 secs vs every 12 secs).
+The job of the shuffler queue is to order transactions fairly by randomizing their positions within each chunk. This does not mean, for example, that the entire transaction order within an eth2 block is randomized together. Transactions are only randomized within the latency width of a picker set, which is usually much shorter (perhaps every 1.4 secs vs every 12 secs).
 
-The result is to randomize order where the true order is statistically uncertain, and to preserve order where we are statistically sure of it. We have just fixed the gross inefficiencies of HFT as a side effect of decentralization (see Latency Window).
+The result is to randomize order where the true order is statistically uncertain, and to preserve time order where we are statistically sure of it. We have created a mathematical proof that randomizing transaction order in this way within the latency width of a trustless network is optimal (see Latency Width and [https://github.com/pmcgoohan/alex-latency-width](https://github.com/pmcgoohan/alex-latency-width) for details). It also fixes the gross inefficiencies of HFT as a side effect.
 
 Before starting work on their allocated chunk, a shuffler waits for the transaction data to arrive. This comes in the form of a MsgPickerChunk from the printer containing their chunk number (chunk numbers match one to one between the picker and shuffler queues, although the queues run independently).
 
@@ -307,16 +309,14 @@ If a violation is simply that a role is not scheduled to send a message for a ce
 
 Anyone with visibility of the network can validate the active participants in this way. If necessary, they can submit fraud proofs for slashing at a later date on the L1 network where slashable deposits are kept for each participant.
 
-It is hoped that fraud proofs can be calculable deterministically in the EVM. Where this proves difficult, a slasher voting system can be used instead. This is beyond the scope of this initial document.
-
-See Validation Rules And Proofs for details.
+Fraud proofs are calculable in the EVM. See Validation Rules And Proofs for details.
 
 
 ### Withholding
 
 So we can validate messages just fine, but if someone doesn't send a message when they are meant to this doesn’t help. If a node withholds a message, we have nothing to validate cryptographically or otherwise.
 
-It is important to remove any incentive for roles to withhold a scheduled message intentionally because it harms us twice: 
+We can skip sets, but we must also remove any incentive for roles to withhold a scheduled message intentionally because it harms us twice: 
 
 
 
@@ -424,12 +424,12 @@ As well as this, the set of pickers changes each chunk, not just every block. Th
 
 ### Transaction Reordering
 
-Transaction reordering attacks are mitigated by ordering at random within a chunk while maintaining time order between chunks in the same block (see Latency Window). As long as one shuffler acts honestly, **transaction reordering attacks are mitigated**.
+Transaction reordering attacks are mitigated by ordering at random within a chunk while maintaining time order between chunks in the same block (see Latency Width below). As long as one shuffler acts honestly, **transaction reordering attacks are mitigated**.
 
 Even if all shufflers are dishonest, there is little that they can do. They cannot change the transaction order by picking their entropy, because it is derived for them from their private key. They cannot alter the list of transactions they are randomizing because it has already been finalized by the pickers.
 
 
-### Latency Window
+### Latency Width
 
 The picker queue runs as fast as possible, but it is not instantaneous. This does not negatively impact the throughput of the system, but it does have some latency and this is a good thing. Let me explain.
 
@@ -437,7 +437,9 @@ Our pickers are distributed across the world. One might be in New York, one in T
 
 Within that latency window all transactions are randomized so that they are statistically simultaneous. This means that on average one transaction is no more or less likely to have priority over any other in the chunk. In any individual chunk they are, but statistically they are not. Also, in one block there are many chunks and time order _is_ preserved between chunks.
 
-It is important to note that we are not losing information here. The true information about when each transaction was initiated is unknowable within the latency window. It is impossible to tell whether Alice in Melbourne sent her order before Bob in New York. Even if we could order by arrival time the way that a centralized authority like Nasdaq does, that does not represent the reality of when those transactions were initiated, just how close the originators are to the exchange.
+It is important to understand that we are not losing information here. It is impossible to tell whether Alice in Melbourne sent her order before Bob in New York. Even if we could order by arrival time the way that a centralized authority like Nasdaq does, that does not represent the reality of when those transactions were initiated, just how close the originators are to the exchange.
+
+Let us define the latency width of a network as the latency between the two most widely spaced nodes in that network. We can prove that the true information about when any given transaction was initiated is unknowable within the latency width in an idealized case (see [https://github.com/pmcgoohan/alex-latency-width](https://github.com/pmcgoohan/alex-latency-width)). Our method approximates the idealized case such that it tends towards being optimal.
 
 The result is to randomize order where the true order is statistically uncertain, and to preserve order where we are statistically sure of it. Because the pickers change each cycle and are distributed globally there is no centralized exchange to position yourself close to.
 
@@ -456,9 +458,9 @@ This is quite significant. Having limited the power of centralized authorities t
 
 While the distributed pickers and shufflers ideally change from block to block, the centralized system pickers and shufflers remain relatively constant, changing slowly over time according to some much longer term process.
 
-This extra random element may mean we need fewer distributed pickers and shufflers in the main set which decreases halting, although we now have the risk of halting from the centralized parties.
+This extra random element may mean we need fewer distributed pickers and shufflers in the main set which decreases halting, although we now have the risk of halting from the centralized parties. Centralized parties could be skipped in rotation.
 
-We may have a partially distributed system picker which combines transaction lists from many light volunteer nodes into a single picker list. This is a good way of involving large numbers of interested parties that are not willing or able to risk a slashable deposit.
+We may have a partially distributed system picker and shuffler which combines lists/entropy from many light volunteer nodes into a single node. This is a good way of involving large numbers of interested parties that are not willing or able to risk a slashable deposit.
 
 
 ### Scheduler 
@@ -515,7 +517,7 @@ Skipper 3 is the final skipper. If they agree they send a skip confirmation cont
 
 As skipper 3 is the final skipper, only it’s skip message can grant the printer the authority to skip the set.
 
-We have still achieved a consensus on skipping the set, but with this process we have also ensured that this takes at least 3 latency windows (perhaps around 4 seconds) giving the shufflers and pickers a fair chance to respond.
+We have still achieved a consensus on skipping the set, but with this process we have also ensured that this takes at least 3 latency widths (perhaps around 4 seconds) giving the shufflers and pickers a fair chance to respond.
 
 There may have to be several skipper delay lines in this case, as the chance of reaching a consensus to skip in series (skip threshold = skipper count) is usually smaller than in parallel (skip threshold &lt;= skipper count). Also the delay line itself can now halt, so for now we let them work in parallel instead.
 
@@ -601,13 +603,13 @@ Max 1 MsgShufflerChunk per printer.
   <tr>
    <td>Ensure that the shufflers split their key correctly.
    </td>
-   <td>Submit all MsgEntropySplit for a MsgEntropy showing that you cannot derive MsgEntropy from a full set of MsgEntropySplit messages.
+   <td>Submit all MsgEntropySplit and a MsgEntropy showing that you cannot derive MsgEntropy from the full set of MsgEntropySplit messages.
    </td>
   </tr>
   <tr>
    <td>Ensure that the printer formed the MsgPickerChunk message correctly.
    </td>
-   <td>Show that the MsgPickerChunk contains missing or invalid MsgTransactionList/MsgSkip messages.
+   <td>Submit a MsgPickerChunk containing missing or invalid MsgTransactionList/MsgSkip messages.
 <p>
 (if the hash or previous hash is invalid the message can just be ignored)
    </td>
@@ -615,7 +617,7 @@ Max 1 MsgShufflerChunk per printer.
   <tr>
    <td>Ensure that the printer formed the MsgShufflerChunk message correctly.
    </td>
-   <td>Show that the MsgShufflerChunk contains an invalid list of ordered transactions or MsgSkip messages.
+   <td>Submit a MsgShufflerChunk containing an invalid list of ordered transactions or MsgSkip messages.
 <p>
 (if the hash or previous hash is invalid the message can just be ignored)
    </td>
@@ -623,7 +625,7 @@ Max 1 MsgShufflerChunk per printer.
   <tr>
    <td>Ensure that the printer included only and all of the picker’s transactions.
    </td>
-   <td>Submit the relevant MsgShufflerChunk and MsgTransactionList messages showing that the printer added or dropped transactions in MsgShufflerChunk.
+   <td>Submit relevant MsgShufflerChunk and MsgTransactionList messages showing that the printer added or dropped transactions in MsgShufflerChunk.
 <p>
 Note: the printer has a line of defence against getting slashed for sending an invalid chunk if they can prove that another role broke the rules when contributing to the chunk.
 <p>
@@ -860,7 +862,7 @@ t=(n/2)+1
 
 ## Conclusion 
 
-We have identified problematic centralization of block content in the Ethereum network and proposed a solution for it. 
+We have identified problematic centralization of block content in the Ethereum network and proposed a solution for it.
 
 The solution eradicates the vast majority of Miner Extractable Value (MEV) by ensuring fair transaction inclusion and ordering. It also mitigates the worst excesses of High Frequency Trading (HFT), ensuring that as traditional finance moves to Ethereum, these negatives do not follow it.
 
@@ -868,7 +870,7 @@ We have done this in a way that works across many Ethereum networks, including e
 
 We see the creation of a content consensus layer as the realization of Ethereum’s ambitions for full decentralization and of it's ambitions to create fair and equitable globally distributed systems for everybody.
 
-The next revisions of this document will focus on the specifics of integrating the protocol with eth2 and Optimistic rollups.
+Future revisions of this document will focus on the specifics of integrating the protocol with eth2 and Optimistic rollups.
 
 
 ## Contact 
