@@ -116,7 +116,7 @@ Here is a simplified view of the protocol. Pickers choose transactions. Shuffler
 *   Shufflers share their entropy with vaults who then reveal it if the shufflers don’t to **prevent withholding**.
 *   If the process halts because a participant has gone offline or is being obstructive, skippers act to jump the set and **prevent denial of service**.
 *   _eth2_: if a validator proposes a block that diverges from this consensus content, it fails attestation and is not included and the validator may be slashed
-*   _centralized rollup sequencer_: if the sequencer fails to write the consensus content, they are be slashed and possibly voted out
+*   _centralized rollup sequencer_: if the sequencer fails to write the consensus content, they are slashed and possibly voted out
 *   _distributed rollup sequencer_: as with eth2, their block is not be validated by the consensus and fails and/or they are slashed 
 
 
@@ -415,7 +415,7 @@ So printers have no incentive to withhold.
 
 ### Transaction Censorship 
 
-As long as one picker is honest and includes all or most of the transactions they can see in the mempool, then** transaction censorship is mitigated**. 
+As long as one picker is honest and includes all or most of the transactions they can see in the mempool, then **transaction censorship is mitigated**. 
 
 Even if all pickers are dishonest, as long as they have competing interests (are not colluding) they will likely select different transactions and transaction censorship is partly mitigated.
 
