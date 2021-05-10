@@ -210,7 +210,9 @@ This process repeats with the next set of pickers.
 
 The job of the shuffler queue is to order transactions fairly by randomizing their positions within each chunk. This does not mean, for example, that the entire transaction order within an eth2 block is randomized together. Transactions are only randomized within the latency width of a picker set, which is usually much shorter (perhaps every 1.4 secs vs every 12 secs).
 
-The result is to randomize order where the true order is statistically uncertain, and to preserve time order where we are statistically sure of it. We have created a mathematical proof that randomizing transaction order in this way within the latency width of a trustless network is optimal (see Latency Width and [https://github.com/pmcgoohan/alex-latency-width](https://github.com/pmcgoohan/alex-latency-width) for details). It also fixes the gross inefficiencies of HFT as a side effect.
+The result is to randomize order where the true order is statistically uncertain, and to preserve time order where we are statistically sure of it. We have created a mathematical proof that randomizing transaction order in this way within the latency width is approximately equivalent to fair ordering by one honest node (see Latency Width and [https://github.com/pmcgoohan/alex-latency-width](https://github.com/pmcgoohan/alex-latency-width) for details). 
+
+However random ordering can lead to issues with transaction bloat which may need to be addressed by [fair ordering and/or encrypted variants](https://github.com/pmcgoohan/targeting-zero-mev) of the Alex protocol.
 
 Before starting work on their allocated chunk, a shuffler waits for the transaction data to arrive. This comes in the form of a MsgPickerChunk from the printer containing their chunk number (chunk numbers match one to one between the picker and shuffler queues, although the queues run independently).
 
@@ -357,13 +359,9 @@ _Statistical Frontrunning_
 
 Imagine we don’t have distinct picker and shuffler queues and have one single queue instead. The shuffler sees a transaction they’d like to frontrun. They add a transaction to the mempool and then delay until their set is skipped, hoping the next picker will add both it and the previously skipped transactions. 
 
-This is far from risk free for them. Other transactions may also enter the pool which make conditions less favourable for them and the order of all transactions in the chunk is randomized.
+This is far from risk free for them. Other transactions may also enter the pool which make conditions less favourable for them and the order of all transactions in the chunk is randomized. It also only works if adding the transaction has a positive expectation.
 
-It also only works if adding the transaction has a positive expectation. A Uniswap frontrun for example isn’t exploitable in this way. Let’s say they are ahead of the victim transaction and win $10. Now let’s say they are behind the victim transaction, they lose $-10, so their expected win is $0 and not worth doing.
-
-But if the victim transaction aims to take an offer in an order book, they win $10 if they beat the victim transaction and lose nothing if they fail to. In this case their expected win is $5 so it is worth doing.
-
-No matter, neither of these attacks are possible in the system:
+No matter, neither of these attacks are possible by Shufflers:
 
 _Second Chances_ are mitigated by the vaults who reveal the shuffler’s entropy if they don’t. This makes any attempt to withhold ineffective.
 
@@ -437,13 +435,13 @@ Our pickers are distributed across the world. One might be in New York, one in T
 
 Within that latency window all transactions are randomized so that they are statistically simultaneous. This means that on average one transaction is no more or less likely to have priority over any other in the chunk. In any individual chunk they are, but statistically they are not. Also, in one block there are many chunks and time order _is_ preserved between chunks.
 
-It is important to understand that we are not losing information here. It is impossible to tell whether Alice in Melbourne sent her order before Bob in New York. Even if we could order by arrival time the way that a centralized authority like Nasdaq does, that does not represent the reality of when those transactions were initiated, just how close the originators are to the exchange.
-
-Let us define the latency width of a network as the latency between the two most widely spaced nodes in that network. We can prove that the true information about when any given transaction was initiated is unknowable within the latency width in an idealized case (see [https://github.com/pmcgoohan/alex-latency-width](https://github.com/pmcgoohan/alex-latency-width)). Our method approximates the idealized case such that it tends towards being optimal.
+Let us define the latency width of a network as the latency between the two most widely spaced nodes in that network. We have created a mathematical proof that randomizing transaction order in this way within the latency width is approximately equivalent to fair ordering by one honest node (see [https://github.com/pmcgoohan/alex-latency-width](https://github.com/pmcgoohan/alex-latency-width)).
 
 The result is to randomize order where the true order is statistically uncertain, and to preserve order where we are statistically sure of it. Because the pickers change each cycle and are distributed globally there is no centralized exchange to position yourself close to.
 
 This is a huge deal. The whole messy inefficiency of HFT is dispensed with. Billions of dollars no longer need to be spent digging up the countryside to get sub millisecond latency advantages at zero social benefit. Users access applications and markets equitably wherever they are in the world and however well or under resourced they are. HFTs are notoriously high volume too, so the transaction rate falls.
+
+However random ordering can lead to issues with transaction bloat which may need to be addressed by [fair ordering and/or encrypted variants](https://github.com/pmcgoohan/targeting-zero-mev) of the Alex protocol.
 
 
 ### Collusion Protection
@@ -868,9 +866,9 @@ The solution eradicates the vast majority of Miner Extractable Value (MEV) by en
 
 We have done this in a way that works across many Ethereum networks, including eth2, rollups and mainnet (although fork risk is likely too great here).
 
-We see the creation of a content consensus layer as the realization of Ethereum’s ambitions for full decentralization and of it's ambitions to create fair and equitable globally distributed systems for everybody.
+However random ordering can lead to issues with transaction bloat which may need to be addressed by [fair ordering and/or encrypted variants](https://github.com/pmcgoohan/targeting-zero-mev) of the Alex protocol.
 
-Future revisions of this document will focus on the specifics of integrating the protocol with eth2 and Optimistic rollups.
+We see the creation of a content consensus layer as the realization of Ethereum’s ambitions for full decentralization and of it's ambitions to create fair and equitable globally distributed systems for everybody.
 
 
 ## Contact 
