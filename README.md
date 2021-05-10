@@ -7,4 +7,4 @@ Proposals:
 *  Application Layer Solution (coming soon) 
 
 Also
-* [Proof for fairness assumptions concerning transaction ordering](https://github.com/pmcgoohan/alex-latency-width)
+* [Proof for fairness assumptions concerning random transaction ordering](https://github.com/pmcgoohan/alex-latency-width)
